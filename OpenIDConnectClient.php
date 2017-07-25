@@ -60,7 +60,7 @@ function b64url2b64($base64url) {
     // "Shouldn't" be necessary, but why not
     $padding = strlen($base64url) % 4;
     if ($padding > 0) {
-	$base64url .= str_repeat("=", 4 - $padding);
+  $base64url .= str_repeat("=", 4 - $padding);
     }
     return strtr($base64url, '-_', '+/');
 }
@@ -121,12 +121,12 @@ class OpenIDConnectClient
      * @var string full system path to the SSL certificate
      */
     private $certPath;
-    
+
     /**
      * @var bool Verify SSL peer on transactions
      */
     private $verifyPeer = true;
-    
+
     /**
      * @var bool Verify peer hostname on transactions
      */
@@ -142,12 +142,12 @@ class OpenIDConnectClient
      */
     private $refreshToken;
 
-    /** 
+    /**
      * @var string if we acquire an id token it will be stored here
      */
     private $idToken;
 
-    /** 
+    /**
      * @var string stores the token response
      */
     private $tokenResponse;
@@ -183,6 +183,11 @@ class OpenIDConnectClient
     private $wellKnown = false;
 
     /**
+    * @var array for extra issuers for comparison with iss (google has 2 possible issuers)
+    */
+    private $extraIssuers = array();
+
+    /**
      * @param $provider_url string optional
      *
      * @param $client_id string optional
@@ -200,6 +205,13 @@ class OpenIDConnectClient
      */
     public function setProviderURL($provider_url) {
         $this->providerConfig['issuer'] = $provider_url;
+    }
+
+    /**
+     * @param $issuer name to compared to iss in JWT claims
+     */
+    public function setExtraIssuer($issuer) {
+      array_push($extraIssuers, $issuer);
     }
 
     /**
@@ -239,9 +251,9 @@ class OpenIDConnectClient
             if ($_REQUEST['state'] != $this->getState()) {
                 throw new OpenIDConnectClientException("Unable to determine state");
             }
-		
-	    // Cleanup state
-	    $this->unsetState();
+
+      // Cleanup state
+      $this->unsetState();
 
             if (!property_exists($token_json, 'id_token')) {
                 throw new OpenIDConnectClientException("User did not authorize openid scope.");
@@ -251,7 +263,7 @@ class OpenIDConnectClient
 
             // Verify the signature
             if ($this->canVerifySignatures()) {
-		if (!$this->getProviderConfigValue('jwks_uri')) {
+    if (!$this->getProviderConfigValue('jwks_uri')) {
                     throw new OpenIDConnectClientException ("Unable to verify signature due to no jwks_uri being defined");
                 }
                 if (!$this->verifyJWTsignature($token_json->id_token)) {
@@ -267,12 +279,12 @@ class OpenIDConnectClient
                 // Clean up the session a little
                 $this->unsetNonce();
 
-		// Save the full response
+    // Save the full response
                 $this->tokenResponse = $token_json;
 
                 // Save the id token
                 $this->idToken = $token_json->id_token;
-                
+
                 // Save the access token
                 $this->accessToken = $token_json->access_token;
 
@@ -350,16 +362,16 @@ class OpenIDConnectClient
         // If the configuration value is not available, attempt to fetch it from a well known config endpoint
         // This is also known as auto "discovery"
         if (!isset($this->providerConfig[$param])) {
-	    if(!$this->wellKnown){
-            	$well_known_config_url = rtrim($this->getProviderURL(),"/") . "/.well-known/openid-configuration";
-            	$this->wellKnown = json_decode($this->fetchURL($well_known_config_url));
-	    }
+      if(!$this->wellKnown){
+              $well_known_config_url = rtrim($this->getProviderURL(),"/") . "/.well-known/openid-configuration";
+              $this->wellKnown = json_decode($this->fetchURL($well_known_config_url));
+      }
 
-	    $value = false;
-	    if(isset($this->wellKnown->{$param})){
+      $value = false;
+      if(isset($this->wellKnown->{$param})){
                 $value = $this->wellKnown->{$param};
-            }	
-	    
+            }
+
             if ($value) {
                 $this->providerConfig[$param] = $value;
             } elseif(isset($default)) {
@@ -409,13 +421,13 @@ class OpenIDConnectClient
          * Support of 'ProxyReverse' configurations.
          */
 
-        if (isset($_SERVER["HTTP_UPGRADE_INSECURE_REQUESTS"]) && ($_SERVER['HTTP_UPGRADE_INSECURE_REQUESTS'] == 1)) { 
-            $protocol = 'https'; 
-        } else { 
+        if (isset($_SERVER["HTTP_UPGRADE_INSECURE_REQUESTS"]) && ($_SERVER['HTTP_UPGRADE_INSECURE_REQUESTS'] == 1)) {
+            $protocol = 'https';
+        } else {
             $protocol = @$_SERVER['HTTP_X_FORWARDED_PROTO']
-                ?: @$_SERVER['REQUEST_SCHEME'] 
-                ?: ((isset($_SERVER["HTTPS"]) && $_SERVER["HTTPS"] == "on") ? "https" : "http"); 
-        } 
+                ?: @$_SERVER['REQUEST_SCHEME']
+                ?: ((isset($_SERVER["HTTPS"]) && $_SERVER["HTTPS"] == "on") ? "https" : "http");
+        }
 
         $port = @intval($_SERVER['HTTP_X_FORWARDED_PORT'])
               ?: @intval($_SERVER["SERVER_PORT"])
@@ -447,7 +459,7 @@ class OpenIDConnectClient
 
         $auth_endpoint = $this->getProviderConfigValue("authorization_endpoint");
         $response_type = "code";
-        
+
         // Generate and store a nonce in the session
         // The nonce is an arbitrary value
         $nonce = $this->setNonce($this->generateRandString());
@@ -473,7 +485,7 @@ class OpenIDConnectClient
         if (sizeof($this->responseTypes) > 0) {
             $auth_params = array_merge($auth_params, array('response_type' => implode(' ', $this->responseTypes)));
         }
-        
+
         $auth_endpoint .= (strpos($auth_endpoint, '?') === false ? '?' : '&') . http_build_query($auth_params, null, '&');
 
         session_commit();
@@ -505,7 +517,7 @@ class OpenIDConnectClient
         return json_decode($this->fetchURL($token_endpoint, $post_params, $headers));
     }
 
-    
+
     /**
      * Requests ID and Access tokens
      *
@@ -616,17 +628,17 @@ class OpenIDConnectClient
             "  <Modulus>" . b64url2b64($key->n) . "</Modulus>\r\n" .
             "  <Exponent>" . b64url2b64($key->e) . "</Exponent>\r\n" .
             "</RSAKeyValue>";
-	if(class_exists('Crypt_RSA')) {
-        	$rsa = new Crypt_RSA();
-		$rsa->setHash($hashtype);
-        	$rsa->loadKey($public_key_xml, Crypt_RSA::PUBLIC_FORMAT_XML);
-        	$rsa->signatureMode = Crypt_RSA::SIGNATURE_PKCS1;
-	} else {
-		$rsa = new \phpseclib\Crypt\RSA();
-		$rsa->setHash($hashtype);
-        	$rsa->loadKey($public_key_xml, \phpseclib\Crypt\RSA::PUBLIC_FORMAT_XML);
-        	$rsa->signatureMode = \phpseclib\Crypt\RSA::SIGNATURE_PKCS1;
-	}
+  if(class_exists('Crypt_RSA')) {
+          $rsa = new Crypt_RSA();
+    $rsa->setHash($hashtype);
+          $rsa->loadKey($public_key_xml, Crypt_RSA::PUBLIC_FORMAT_XML);
+          $rsa->signatureMode = Crypt_RSA::SIGNATURE_PKCS1;
+  } else {
+    $rsa = new \phpseclib\Crypt\RSA();
+    $rsa->setHash($hashtype);
+          $rsa->loadKey($public_key_xml, \phpseclib\Crypt\RSA::PUBLIC_FORMAT_XML);
+          $rsa->signatureMode = \phpseclib\Crypt\RSA::SIGNATURE_PKCS1;
+  }
         return $rsa->verify($payload, $signature);
     }
 
@@ -666,7 +678,7 @@ class OpenIDConnectClient
      * @return bool
      */
     private function verifyJWTclaims($claims, $accessToken = null) {
-	if(isset($claims->at_hash) && isset($accessToken)){
+  if(isset($claims->at_hash) && isset($accessToken)){
             if(isset($this->getAccessTokenHeader()->alg) && $this->getAccessTokenHeader()->alg != 'none'){
                 $bit = substr($this->getAccessTokenHeader()->alg, 2, 3);
             }else{
@@ -676,7 +688,7 @@ class OpenIDConnectClient
             $len = ((int)$bit)/16;
             $expecte_at_hash = $this->urlEncode(substr(hash('sha'.$bit, $accessToken, true), 0, $len));
         }
-        return (($claims->iss == $this->getProviderURL())
+        return ((($claims->iss == $this->getProviderURL()) || (in_array($this->extraIssuers, $claims->iss)))
             && (($claims->aud == $this->clientID) || (in_array($this->clientID, $claims->aud)))
             && ($claims->nonce == $this->getNonce())
             && ( !isset($claims->exp) || $claims->exp >= time())
@@ -684,7 +696,7 @@ class OpenIDConnectClient
             && ( !isset($claims->at_hash) || $claims->at_hash == $expecte_at_hash )
         );
     }
-	
+
     /**
      * @param string $str
      * @return string
@@ -773,7 +785,7 @@ class OpenIDConnectClient
         // Determine whether this is a GET or POST
         if ($post_body != null) {
             // curl_setopt($ch, CURLOPT_POST, 1);
-	    // Alows to keep the POST method even after redirect
+      // Alows to keep the POST method even after redirect
             curl_setopt($ch, CURLOPT_CUSTOMREQUEST, "POST");
             curl_setopt($ch, CURLOPT_POSTFIELDS, $post_body);
 
@@ -805,10 +817,10 @@ class OpenIDConnectClient
 
         // Include header in result? (0 = yes, 1 = no)
         curl_setopt($ch, CURLOPT_HEADER, 0);
-	
-	// Allows to follow redirect
+
+  // Allows to follow redirect
         curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
-	    
+
         /**
          * Set cert
          * Otherwise ignore SSL peer verification
@@ -816,19 +828,19 @@ class OpenIDConnectClient
         if (isset($this->certPath)) {
             curl_setopt($ch, CURLOPT_CAINFO, $this->certPath);
         }
-        
+
         if($this->verifyHost) {
             curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 2);
         } else {
             curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 0);
         }
-        
+
         if($this->verifyPeer) {
             curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, true);
         } else {
-            curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);        
+            curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
         }
-        
+
         // Should cURL return or print out the data? (true = return, false = print)
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
 
@@ -894,14 +906,14 @@ class OpenIDConnectClient
     {
         return $this->certPath;
     }
-    
+
     /**
      * @param bool $verifyPeer
      */
     public function setVerifyPeer($verifyPeer) {
         $this->verifyPeer = $verifyPeer;
     }
-    
+
     /**
      * @param bool $verifyHost
      */
@@ -1091,7 +1103,7 @@ class OpenIDConnectClient
     public function getTokenResponse() {
         return $this->tokenResponse;
     }
-	
+
     /**
      * Stores nonce
      *
@@ -1102,18 +1114,18 @@ class OpenIDConnectClient
         $_SESSION['openid_connect_nonce'] = $nonce;
         return $nonce;
     }
-    
+
     /**
-     * Get stored nonce 
+     * Get stored nonce
      *
      * @return string
      */
     protected function getNonce() {
         return $_SESSION['openid_connect_nonce'];
     }
-	
+
     /**
-     * Cleanup nonce 
+     * Cleanup nonce
      *
      * @return void
      */
@@ -1131,18 +1143,18 @@ class OpenIDConnectClient
         $_SESSION['openid_connect_state'] = $state;
         return $state;
     }
-    
+
     /**
-     * Get stored state 
+     * Get stored state
      *
      * @return string
      */
     protected function getState() {
         return $_SESSION['openid_connect_state'];
     }
-    
+
     /**
-     * Cleanup state 
+     * Cleanup state
      *
      * @return void
      */
