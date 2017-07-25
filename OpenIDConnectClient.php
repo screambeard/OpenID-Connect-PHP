@@ -60,7 +60,7 @@ function b64url2b64($base64url) {
     // "Shouldn't" be necessary, but why not
     $padding = strlen($base64url) % 4;
     if ($padding > 0) {
-	$base64url .= str_repeat("=", 4 - $padding);
+  $base64url .= str_repeat("=", 4 - $padding);
     }
     return strtr($base64url, '-_', '+/');
 }
@@ -148,6 +148,11 @@ class OpenIDConnectClient
     private $authParams = array();
 
     /**
+     * @var array holds authentication parameters
+     */
+    private $extraIssuers = array();
+
+    /**
      * @param $provider_url string optional
      *
      * @param $client_id string optional
@@ -165,6 +170,13 @@ class OpenIDConnectClient
      */
     public function setProviderURL($provider_url) {
         $this->providerConfig['issuer'] = $provider_url;
+    }
+
+    /**
+     * @param $issuer
+     */
+    public function setExtraIssuer($issuer) {
+        array_push($this->exrtaIssuers, $issuer);
     }
 
     /**
@@ -194,20 +206,20 @@ class OpenIDConnectClient
                 throw new OpenIDConnectClientException("Unable to determine state");
             }
 
-	    if (!property_exists($token_json, 'id_token')) {
-		throw new OpenIDConnectClientException("User did not authorize openid scope.");
-	    }
+      if (!property_exists($token_json, 'id_token')) {
+    throw new OpenIDConnectClientException("User did not authorize openid scope.");
+      }
 
             $claims = $this->decodeJWT($token_json->id_token, 1);
 
-	    // Verify the signature
-	    if ($this->canVerifySignatures()) {
-		if (!$this->verifyJWTsignature($token_json->id_token)) {
-		    throw new OpenIDConnectClientException ("Unable to verify signature");
-		}
-	    } else {
-		user_error("Warning: JWT signature verification unavailable.");
-	    }
+      // Verify the signature
+      if ($this->canVerifySignatures()) {
+    if (!$this->verifyJWTsignature($token_json->id_token)) {
+        throw new OpenIDConnectClientException ("Unable to verify signature");
+    }
+      } else {
+    user_error("Warning: JWT signature verification unavailable.");
+      }
 
             // If this is a valid claim
             if ($this->verifyJWTclaims($claims)) {
@@ -505,7 +517,7 @@ class OpenIDConnectClient
      */
     private function verifyJWTclaims($claims) {
 
-        return (($claims->iss == $this->getProviderURL())
+        return ((($claims->iss == $this->getProviderURL()) || (in_array($this->extraIssuers, $claims->iss)))
             && (($claims->aud == $this->clientID) || (in_array($this->clientID, $claims->aud)))
             && ($claims->nonce == $_SESSION['openid_connect_nonce']));
 
