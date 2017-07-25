@@ -176,7 +176,7 @@ class OpenIDConnectClient
      * @param $issuer
      */
     public function setExtraIssuer($issuer) {
-        array_push($this->exrtaIssuers, $issuer);
+        array_push($this->extraIssuers, $issuer);
     }
 
     /**
