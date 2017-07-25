@@ -517,7 +517,7 @@ class OpenIDConnectClient
      */
     private function verifyJWTclaims($claims) {
 
-        return ((($claims->iss == $this->getProviderURL()) || (in_array($this->extraIssuers, $claims->iss)))
+        return ((($claims->iss == $this->getProviderURL()) || (in_array($claims->iss, $this->extraIssuers)))
             && (($claims->aud == $this->clientID) || (in_array($this->clientID, $claims->aud)))
             && ($claims->nonce == $_SESSION['openid_connect_nonce']));
 
