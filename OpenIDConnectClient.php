@@ -561,31 +561,39 @@ class OpenIDConnectClient
      * @return mixed
      *
      */
-    public function requestUserInfo($attribute) {
+    public function requestUserInfo($attribute = null) {
+
+        if(!$attribute) {
+          if(is_array($this->userInfo) && count($this->userInfo) > 0) {
+            return $this->userInfo;
+          }
+
+          $this->userInfo = $this->requestUserInfoFromProvider();
+          return $this->userInfo;
+        }
 
         // Check to see if the attribute is already in memory
-        if (array_key_exists($attribute, $this->userInfo)) {
+        if (is_array($this->userInfo) && array_key_exists($attribute, $this->userInfo)) {
             return $this->userInfo->$attribute;
         }
 
-        $user_info_endpoint = $this->getProviderConfigValue("userinfo_endpoint");
-        $schema = 'openid';
+        $this->userInfo = $this->requestUserInfoFromProvider();
 
-        $user_info_endpoint .= "?schema=" . $schema;
-
-        //The accessToken has to be send in the Authorization header, so we create a new array with only this header.
-        $headers = array("Authorization: Bearer {$this->accessToken}");
-
-        $user_json = json_decode($this->fetchURL($user_info_endpoint,null,$headers));
-
-        $this->userInfo = $user_json;
-
-        if (array_key_exists($attribute, $this->userInfo)) {
+        if (is_array($this->userInfo) && array_key_exists($attribute, $this->userInfo)) {
             return $this->userInfo->$attribute;
         }
 
         return null;
+    }
 
+    private function requestUserInfoFromProvider() {
+      $user_info_endpoint = $this->getProviderConfigValue("userinfo_endpoint");
+      $schema = 'openid';
+      $user_info_endpoint .= "?schema=" . $schema;
+      //The accessToken has to be send in the Authorization header, so we create a new array with only this header.
+      $headers = array("Authorization: Bearer {$this->accessToken}");
+      $user_json = json_decode($this->fetchURL($user_info_endpoint,null,$headers));
+      return $user_json;
     }
 
 
