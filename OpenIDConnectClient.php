@@ -568,11 +568,6 @@ class OpenIDConnectClient
      *
      */
      public function requestUserInfo($attribute = null) {
-         \Log::info('requestUserInfo',[$attribute]);
-         if(isset($this->claims)) {
-           \Log::info('claims',[$this->claims]);
-         }
-
          if(!$attribute) {
            if(is_array($this->userInfo) && count($this->userInfo) > 0) {
              return $this->userInfo;
@@ -602,12 +597,15 @@ class OpenIDConnectClient
        $user_info_endpoint .= "?schema=" . $schema;
        //The accessToken has to be send in the Authorization header, so we create a new array with only this header.
        $headers = array("Authorization: Bearer {$this->accessToken}");
-       \Log::info('requestUserInfoFromProvider request',[$user_info_endpoint, $headers]);
+       //get the string
        $user_raw = $this->fetchURL($user_info_endpoint,null,$headers);
-       \Log::info('requestUserInfoFromProvider $user_raw',[$user_raw]);
-       $user_json = json_decode($user_raw);
-       \Log::info('requestUserInfoFromProvider $user_json',[$user_json]);
-       return $user_json;
+       //encode to utf8 for json
+       $user_utf8 = utf8_encode($user_raw);
+       //decode to JSON
+       $user_utf8_json = json_decode($user_utf8);
+
+       //return the json
+       return $user_utf8_json;
      }
 
 
