@@ -561,40 +561,48 @@ class OpenIDConnectClient
      * @return mixed
      *
      */
-    public function requestUserInfo($attribute = null) {
+     public function requestUserInfo($attribute = null) {
+         \Log::info('requestUserInfo',[$attribute]);
+         if(isset($this->claims)) {
+           \Log::info('claims',[$this->claims]);
+         }
 
-        if(!$attribute) {
-          if(is_array($this->userInfo) && count($this->userInfo) > 0) {
-            return $this->userInfo;
-          }
+         if(!$attribute) {
+           if(is_array($this->userInfo) && count($this->userInfo) > 0) {
+             return $this->userInfo;
+           }
 
-          $this->userInfo = $this->requestUserInfoFromProvider();
-          return $this->userInfo;
-        }
+           $this->userInfo = $this->requestUserInfoFromProvider();
+           return $this->userInfo;
+         }
 
-        // Check to see if the attribute is already in memory
-        if (is_array($this->userInfo) && array_key_exists($attribute, $this->userInfo)) {
-            return $this->userInfo->$attribute;
-        }
+         // Check to see if the attribute is already in memory
+         if (isset($this->userInfo) && array_key_exists($attribute, $this->userInfo)) {
+             return $this->userInfo->$attribute;
+         }
 
-        $this->userInfo = $this->requestUserInfoFromProvider();
+         $this->userInfo = $this->requestUserInfoFromProvider();
 
-        if (is_array($this->userInfo) && array_key_exists($attribute, $this->userInfo)) {
-            return $this->userInfo->$attribute;
-        }
+         if (array_key_exists($attribute, $this->userInfo)) {
+             return $this->userInfo->$attribute;
+         }
 
-        return null;
-    }
+         return null;
+     }
 
-    private function requestUserInfoFromProvider() {
-      $user_info_endpoint = $this->getProviderConfigValue("userinfo_endpoint");
-      $schema = 'openid';
-      $user_info_endpoint .= "?schema=" . $schema;
-      //The accessToken has to be send in the Authorization header, so we create a new array with only this header.
-      $headers = array("Authorization: Bearer {$this->accessToken}");
-      $user_json = json_decode($this->fetchURL($user_info_endpoint,null,$headers));
-      return $user_json;
-    }
+     private function requestUserInfoFromProvider() {
+       $user_info_endpoint = $this->getProviderConfigValue("userinfo_endpoint");
+       $schema = 'openid';
+       $user_info_endpoint .= "?schema=" . $schema;
+       //The accessToken has to be send in the Authorization header, so we create a new array with only this header.
+       $headers = array("Authorization: Bearer {$this->accessToken}");
+       \Log::info('requestUserInfoFromProvider request',[$user_info_endpoint, $headers]);
+       $user_raw = $this->fetchURL($user_info_endpoint,null,$headers);
+       \Log::info('requestUserInfoFromProvider $user_raw',[$user_raw]);
+       $user_json = json_decode($user_raw);
+       \Log::info('requestUserInfoFromProvider $user_json',[$user_json]);
+       return $user_json;
+     }
 
 
     /**
