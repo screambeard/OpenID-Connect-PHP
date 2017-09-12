@@ -128,6 +128,11 @@ class OpenIDConnectClient
     private $accessToken;
 
     /**
+     * @var object with id_token
+     */
+    private $claims;
+
+    /**
      * @var string if we aquire a refresh token it will be stored here
      */
     private $refreshToken;
@@ -211,6 +216,7 @@ class OpenIDConnectClient
       }
 
             $claims = $this->decodeJWT($token_json->id_token, 1);
+            $this->claims = $claims;
 
       // Verify the signature
       if ($this->canVerifySignatures()) {
